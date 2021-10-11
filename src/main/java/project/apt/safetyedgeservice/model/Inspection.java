@@ -6,7 +6,7 @@ public class Inspection {
 
 
     private String id;
-    private Integer inspectionNumber;
+    private Long inspectionNumber;
     private String licensePlate;
     private String comment;
     private Boolean passed;
@@ -15,7 +15,8 @@ public class Inspection {
     public Inspection() {
     }
 
-    public Inspection(String licensePlate, String comment, Boolean passed, LocalDate inspectionDate) {
+    public Inspection(Long inspectionNumber,String licensePlate, String comment, Boolean passed, LocalDate inspectionDate) {
+        setInspectionNumber(inspectionNumber);
         setLicensePlate(licensePlate);
         setComment(comment);
         setPassed(passed);
@@ -62,11 +63,11 @@ public class Inspection {
         this.inspectionDate = inspectionDate;
     }
 
-    public Integer getInspectionNumber() {
+    public Long getInspectionNumber() {
         return inspectionNumber;
     }
 
-    public void setInspectionNumber(Integer inspectionNumber) {
+    public void setInspectionNumber(Long inspectionNumber) {
         this.inspectionNumber = inspectionNumber;
     }
 
