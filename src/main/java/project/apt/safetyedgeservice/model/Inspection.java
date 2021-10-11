@@ -3,25 +3,22 @@ package project.apt.safetyedgeservice.model;
 import java.time.LocalDate;
 
 public class Inspection {
-    public enum Status {
-        pass,
-        fail
-    }
+
 
     private String id;
     private Integer inspectionNumber;
     private String licensePlate;
     private String comment;
-    private Status status;
+    private Boolean passed;
     private LocalDate inspectionDate;
 
     public Inspection() {
     }
 
-    public Inspection(String licensePlate, String comment, Status status, LocalDate inspectionDate) {
+    public Inspection(String licensePlate, String comment, Boolean passed, LocalDate inspectionDate) {
         setLicensePlate(licensePlate);
         setComment(comment);
-        setStatus(status);
+        setPassed(passed);
         setInspectionDate(inspectionDate);
     }
 
@@ -49,12 +46,12 @@ public class Inspection {
         this.comment = comment;
     }
 
-    public Status getStatus() {
-        return status;
+    public Boolean getPassed() {
+        return passed;
     }
 
-    public void setStatus(Status status) {
-        this.status =status;
+    public void setPassed(Boolean passed) {
+        this.passed =passed;
     }
 
     public LocalDate getInspectionDate() {
