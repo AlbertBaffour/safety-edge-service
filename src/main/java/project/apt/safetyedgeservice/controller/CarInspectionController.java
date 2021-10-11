@@ -3,16 +3,16 @@ package project.apt.safetyedgeservice.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
-import project.apt.safetyedgeservice.model.CarInfo;
+import project.apt.safetyedgeservice.model.Car;
 import project.apt.safetyedgeservice.model.Inspection;
 import project.apt.safetyedgeservice.model.InspectionHistory;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,10 +38,10 @@ public class CarInspectionController {
         List<Inspection> inspections = responseEntityInspections.getBody();
         if (inspections != null) {
             for (Inspection inspection :inspections) {
-                CarInfo carInfo = restTemplate.getForObject("http://" + carInfoServiceBaseUrl + "/car/{licensePlate}",
-                        CarInfo.class, inspection.getLicensePlate());
-                if (carInfo!=null){
-                    returnList.add(new InspectionHistory(carInfo, inspection));
+                Car car = restTemplate.getForObject("http://" + carInfoServiceBaseUrl + "/car/{licensePlate}",
+                        Car.class, inspection.getLicensePlate());
+                if (car !=null){
+                    returnList.add(new InspectionHistory(car, inspection));
                 }
             }
         }
@@ -55,10 +55,10 @@ public class CarInspectionController {
                         HttpMethod.GET, null, new ParameterizedTypeReference<List<Inspection>>() {
                         }, licensePlate);
         List<Inspection> inspections = responseEntityInspections.getBody();
-        CarInfo carInfo = restTemplate.getForObject("http://" + carInfoServiceBaseUrl + "/car/{licensePlate}",
-                                CarInfo.class, licensePlate);
-        if(carInfo != null){
-            inspectionHistory= new InspectionHistory(carInfo,inspections);
+        Car car = restTemplate.getForObject("http://" + carInfoServiceBaseUrl + "/car/{licensePlate}",
+                                Car.class, licensePlate);
+        if(car != null){
+            inspectionHistory= new InspectionHistory(car,inspections);
         }
         return inspectionHistory;
     }
@@ -66,14 +66,14 @@ public class CarInspectionController {
     public InspectionHistory getInspectionsByLicensePlateAndInspectionDate(@PathVariable String licensePlate,@PathVariable LocalDate inspectionDate){
         InspectionHistory inspectionHistory= new InspectionHistory();
         ResponseEntity<List<Inspection>> responseEntityInspections =
-                restTemplate.exchange("http://" + inspectionServiceBaseUrl + "/inspections/license_plate/{licensePlate}/inspection_date/{inspectionDate}",
+                restTemplate.exchange("http://" + inspectionServiceBaseUrl + "/inspections/license_plate/"+licensePlate+"/inspection_date/"+inspectionDate,
                         HttpMethod.GET, null, new ParameterizedTypeReference<List<Inspection>>() {
-                        }, licensePlate,inspectionDate);
+                        });
         List<Inspection> inspections = responseEntityInspections.getBody();
-        CarInfo carInfo = restTemplate.getForObject("http://" + carInfoServiceBaseUrl + "/car/{licensePlate}",
-                CarInfo.class, licensePlate);
-        if(carInfo != null){
-            inspectionHistory= new InspectionHistory(carInfo,inspections);
+        Car car = restTemplate.getForObject("http://" + carInfoServiceBaseUrl + "/car/{licensePlate}",
+                Car.class, licensePlate);
+        if(car != null){
+            inspectionHistory= new InspectionHistory(car,inspections);
         }
         return inspectionHistory;
     }
@@ -81,17 +81,66 @@ public class CarInspectionController {
     public InspectionHistory getInspectionsByLicensePlateAndInspectionDateAndPassed(@PathVariable String licensePlate,@PathVariable LocalDate inspectionDate,@PathVariable Boolean passed){
         InspectionHistory inspectionHistory= new InspectionHistory();
         ResponseEntity<List<Inspection>> responseEntityInspections =
-                restTemplate.exchange("http://" + inspectionServiceBaseUrl + "/inspections/license_plate/{licensePlate}/inspection_date/{inspectionDate}/passed/{passed}",
-                        HttpMethod.GET, null, new ParameterizedTypeReference<List<Inspection>>() {
-                        }, licensePlate,inspectionDate);
+                restTemplate.exchange("http://" + inspectionServiceBaseUrl + "/inspections/license_plate/"+licensePlate+"/inspection_date/"+inspectionDate+"/passed/"+passed,
+                        HttpMethod.GET, null, new ParameterizedTypeReference<List<Inspection>>() {});
         List<Inspection> inspections = responseEntityInspections.getBody();
-        CarInfo carInfo = restTemplate.getForObject("http://" + carInfoServiceBaseUrl + "/car/{licensePlate}",
-                CarInfo.class, licensePlate);
-        if(carInfo != null){
-            inspectionHistory= new InspectionHistory(carInfo,inspections);
+        Car car = restTemplate.getForObject("http://" + carInfoServiceBaseUrl + "/car/{licensePlate}",
+                Car.class, licensePlate);
+        if(car != null){
+            inspectionHistory= new InspectionHistory(car,inspections);
         }
         return inspectionHistory;
     }
+    @PostMapping("/inspections")
+    public InspectionHistory addInspection(@RequestParam String licensePlate, @RequestParam String comment, @RequestParam Boolean passed){
+        Long inspectionNumber= Instant.now().getEpochSecond();
+        Inspection inspection =
+                restTemplate.postForObject("http://" + inspectionServiceBaseUrl + "/inspections",
+                        new Inspection(inspectionNumber,licensePlate,comment,passed, LocalDate.now()),Inspection.class);
 
+        Car car =
+                restTemplate.getForObject("http://" + carInfoServiceBaseUrl + "/car/{licensePlate}",
+                        Car.class,licensePlate);
+
+        return new InspectionHistory(car, inspection);
+    }
+
+    @PutMapping("/inspections")
+    public InspectionHistory updateInspection(@RequestParam Long inspectionNumber,@RequestParam String licensePlate, @RequestParam String comment, @RequestParam Boolean passed){
+
+        Inspection inspection =
+                restTemplate.getForObject("http://" +inspectionServiceBaseUrl+ "/inspections/inspection_number/" + inspectionNumber,
+                        Inspection.class);
+        Inspection retrievedInspection=new Inspection();
+        if(inspection!=null) {
+            if (comment != null) {
+                inspection.setComment(comment);
+            }
+            if (passed != null) {
+                inspection.setPassed(passed);
+            }
+            inspection.setInspectionDate(LocalDate.now());
+
+            ResponseEntity<Inspection> responseEntityInspection =
+                    restTemplate.exchange("http://" + inspectionServiceBaseUrl + "/inspections",
+                            HttpMethod.PUT, new HttpEntity<>(inspection), Inspection.class);
+
+            retrievedInspection = responseEntityInspection.getBody();
+        }
+        Car car =
+                restTemplate.getForObject("http://" + carInfoServiceBaseUrl + "/license_plate/{licensePlate}",
+                        Car.class,licensePlate);
+
+        assert car != null;
+        return new InspectionHistory(car, retrievedInspection);
+    }
+
+    @DeleteMapping("/inspections/inspection_number/{inspectionNumber}")
+    public ResponseEntity deleteInspection(@PathVariable Long inspectionNumber){
+
+        restTemplate.delete("http://" + inspectionServiceBaseUrl + "/inspections/inspection_number/" + inspectionNumber);
+
+        return ResponseEntity.ok().build();
+    }
 
 }
