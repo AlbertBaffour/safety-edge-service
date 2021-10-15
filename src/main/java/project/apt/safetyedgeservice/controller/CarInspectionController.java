@@ -3,6 +3,7 @@ package project.apt.safetyedgeservice.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
@@ -47,6 +48,15 @@ public class CarInspectionController {
         }
         return returnList;
     }
+    @GetMapping("/inspections/inspection_number/{inspectionNumber}")
+    public Inspection getInspectionsByInspectionNumber(@PathVariable Long inspectionNumber){
+        ResponseEntity<Inspection> responseEntityInspections =
+                restTemplate.exchange("http://" + inspectionServiceBaseUrl + "/inspections/inspection_number/{inspectionNumber}",
+                        HttpMethod.GET, null, new ParameterizedTypeReference<Inspection>() {
+                        }, inspectionNumber);
+        return responseEntityInspections.getBody();
+
+    }
     @GetMapping("/inspections/license_plate/{licensePlate}")
     public InspectionHistory getInspectionsByLicensePlate(@PathVariable String licensePlate){
         InspectionHistory inspectionHistory= new InspectionHistory();
@@ -63,26 +73,12 @@ public class CarInspectionController {
         return inspectionHistory;
     }
     @GetMapping("/inspections/license_plate/{licensePlate}/inspection_date/{inspectionDate}")
-    public InspectionHistory getInspectionsByLicensePlateAndInspectionDate(@PathVariable String licensePlate,@PathVariable LocalDate inspectionDate){
+    public InspectionHistory getInspectionsByLicensePlateAndInspectionDate(@PathVariable String licensePlate,@PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate inspectionDate){
         InspectionHistory inspectionHistory= new InspectionHistory();
         ResponseEntity<List<Inspection>> responseEntityInspections =
                 restTemplate.exchange("http://" + inspectionServiceBaseUrl + "/inspections/license_plate/"+licensePlate+"/inspection_date/"+inspectionDate,
                         HttpMethod.GET, null, new ParameterizedTypeReference<List<Inspection>>() {
                         });
-        List<Inspection> inspections = responseEntityInspections.getBody();
-        Car car = restTemplate.getForObject("http://" + carInfoServiceBaseUrl + "/car/{licensePlate}",
-                Car.class, licensePlate);
-        if(car != null){
-            inspectionHistory= new InspectionHistory(car,inspections);
-        }
-        return inspectionHistory;
-    }
-    @GetMapping("/inspections/license_plate/{licensePlate}/inspection_date/{inspectionDate}/passed/{passed}")
-    public InspectionHistory getInspectionsByLicensePlateAndInspectionDateAndPassed(@PathVariable String licensePlate,@PathVariable LocalDate inspectionDate,@PathVariable Boolean passed){
-        InspectionHistory inspectionHistory= new InspectionHistory();
-        ResponseEntity<List<Inspection>> responseEntityInspections =
-                restTemplate.exchange("http://" + inspectionServiceBaseUrl + "/inspections/license_plate/"+licensePlate+"/inspection_date/"+inspectionDate+"/passed/"+passed,
-                        HttpMethod.GET, null, new ParameterizedTypeReference<List<Inspection>>() {});
         List<Inspection> inspections = responseEntityInspections.getBody();
         Car car = restTemplate.getForObject("http://" + carInfoServiceBaseUrl + "/car/{licensePlate}",
                 Car.class, licensePlate);
