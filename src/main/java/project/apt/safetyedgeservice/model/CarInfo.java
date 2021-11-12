@@ -1,6 +1,6 @@
 package project.apt.safetyedgeservice.model;
 
-public class Car {
+public class CarInfo {
     public enum PortierOptie {
         TWEEDEURS,
         VIERDEURS;
@@ -14,9 +14,9 @@ public class Car {
     private String euroNorm;
     private PortierOptie portier;
 
-    public Car() {}
+    public CarInfo() {}
 
-    public Car(String merk, String type, String licensePlate, String euroNorm, PortierOptie portier) {
+    public CarInfo(String merk, String type, String licensePlate, String euroNorm, PortierOptie portier) {
         this.merk = merk;
         this.type = type;
         this.licensePlate = licensePlate;
