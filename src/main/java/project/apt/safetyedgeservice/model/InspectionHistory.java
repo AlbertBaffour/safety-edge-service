@@ -13,17 +13,17 @@ public class InspectionHistory {
     public InspectionHistory() {
     }
 
-    public InspectionHistory(Car car, List<Inspection> inspections) {
-        setMerk(car.getMerk());
-        setType(car.getType());
-        setLicensePlate(car.getLicensePlate());
+    public InspectionHistory(CarInfo carInfo, List<Inspection> inspections) {
+        setMerk(carInfo.getMerk());
+        setType(carInfo.getType());
+        setLicensePlate(carInfo.getLicensePlate());
         setInspections(inspections);
     }
 
-    public InspectionHistory(Car car, Inspection inspection) {
-        setMerk(car.getMerk());
-        setType(car.getType());
-        setLicensePlate(car.getLicensePlate());
+    public InspectionHistory(CarInfo carInfo, Inspection inspection) {
+        setMerk(carInfo.getMerk());
+        setType(carInfo.getType());
+        setLicensePlate(carInfo.getLicensePlate());
         inspections = new ArrayList<>();
         inspections.add(inspection);
         setInspections(inspections);
