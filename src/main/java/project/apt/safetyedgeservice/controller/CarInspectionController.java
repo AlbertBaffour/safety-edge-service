@@ -118,24 +118,13 @@ public class CarInspectionController {
 
     /////////////Inspections Mapppings///////////////////////
 
-    @GetMapping("/inspections/")
-    public List<InspectionHistory> getInspections(){
-        List<InspectionHistory> returnList= new ArrayList();
+    @GetMapping("/inspections")
+    public List<Inspection> getInspections(){
         ResponseEntity<List<Inspection>> responseEntityInspections =
-                restTemplate.exchange("http://" + inspectionServiceBaseUrl + "/inspections/",
+                restTemplate.exchange("http://" + inspectionServiceBaseUrl + "/inspections",
                         HttpMethod.GET, null, new ParameterizedTypeReference<List<Inspection>>() {
                         });
-        List<Inspection> inspections = responseEntityInspections.getBody();
-        if (inspections != null) {
-            for (Inspection inspection :inspections) {
-                CarInfo carInfo = restTemplate.getForObject("http://" + carInfoServiceBaseUrl + "/cars/license_plate/{licensePlate}",
-                        CarInfo.class, inspection.getLicensePlate());
-                if (carInfo !=null){
-                    returnList.add(new InspectionHistory(carInfo, inspection));
-                }
-            }
-        }
-        return returnList;
+       return responseEntityInspections.getBody();
     }
     @GetMapping("/inspections/inspection_number/{inspectionNumber}")
     public Inspection getInspectionsByInspectionNumber(@PathVariable Long inspectionNumber){
@@ -184,7 +173,7 @@ public class CarInspectionController {
                         new Inspection(inspectionNumber,licensePlate,comment,passed, LocalDate.now()),Inspection.class);
 
         CarInfo carInfo =
-                restTemplate.getForObject("http://" + carInfoServiceBaseUrl + "/cars/license_plate{licensePlate}",
+                restTemplate.getForObject("http://" + carInfoServiceBaseUrl + "/cars/license_plate/{licensePlate}",
                         CarInfo.class,licensePlate);
 
         return new InspectionHistory(carInfo, inspection);
