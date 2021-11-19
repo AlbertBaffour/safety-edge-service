@@ -74,12 +74,16 @@ class CarInspectionControllerUnitTests {
     private Inspection inspection3= new Inspection(3L,"1ABC871","koplamp stuk",false, LocalDate.now().minusDays(2));
     private Inspection inspection4= new Inspection(4L,"1ABC871","Geen opmerking",true, LocalDate.now());
 
+
+
     private List<Inspection> allInspections = Arrays.asList(inspection1, inspection2,inspection3,inspection4);
     private List<Inspection> allInspectionsCar1 = Arrays.asList(inspection1, inspection2);
     private List<Inspection> allInspectionsCar2 = Arrays.asList(inspection3, inspection4);
     private List<Inspection> inspectionsByPlateAndDate = Arrays.asList(inspection2);
-   private List<CarInfo> allCars = Arrays.asList(carInfo1, carInfo2);
 
+   private List<CarInfo> allCars = Arrays.asList(carInfo1, carInfo2);
+    private List<CarInfo> CarsByMerkAudi = Arrays.asList(carInfo1);
+    private List<CarInfo> CarsByPortier4 = Arrays.asList(carInfo2);
 
     @BeforeEach
     public void initializeMockserver() {
@@ -241,12 +245,156 @@ class CarInspectionControllerUnitTests {
     }
 
 
-    //Public methods
+
+    @Test
+    public void whenGetCars_thenReturnCarsJson() throws Exception {
+
+        // GET all Cars
+        mockServer.expect(ExpectedCount.once(),
+                requestTo(new URI("http://" + carInfoServiceBaseUrl + "/cars")))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withStatus(HttpStatus.OK)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(mapper.writeValueAsString(allCars))
+                );
+
+        mockMvc.perform(get("/cars"))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].licensePlate", Matchers.is("1VQW871")))
+                .andExpect(jsonPath("$[1].merk", Matchers.is("vw")))
+                .andExpect(jsonPath("$", hasSize(2)));
+    }
+    @Test
+    public void whenGetCarsByLicensePlate_thenReturnCarJson() throws Exception {
+        //mock GetCar
+        mockGetCarByNumberPlate("1VQW871", carInfo1);
+
+        mockMvc.perform(get("/cars/license_plate/{license_plate}", "1VQW871"))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.licensePlate", Matchers.is("1VQW871")))
+                .andExpect(jsonPath("$.merk", Matchers.is("audi")))
+                .andExpect(jsonPath("$.type", Matchers.is("a3")));
+    }
+    @Test
+    public void whenGetCarsByMerk_thenReturnCarsJson() throws Exception {
+
+        // GET all Cars
+        mockServer.expect(ExpectedCount.once(),
+                requestTo(new URI("http://" + carInfoServiceBaseUrl + "/cars/merk/audi")))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withStatus(HttpStatus.OK)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(mapper.writeValueAsString(CarsByMerkAudi))
+                );
+
+
+        mockMvc.perform(get("/cars/merk/{merK}", "audi"))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].licensePlate", Matchers.is("1VQW871")))
+                .andExpect(jsonPath("$[0].merk", Matchers.is("audi")))
+                .andExpect(jsonPath("$", hasSize(1)));
+    }
+    @Test
+    public void whenGetCarsByPortier_thenReturnPortierJson() throws Exception {
+
+        // GET all Cars
+        mockServer.expect(ExpectedCount.once(),
+                requestTo(new URI("http://" + carInfoServiceBaseUrl + "/cars/portier/VIERDEURS")))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withStatus(HttpStatus.OK)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(mapper.writeValueAsString(CarsByPortier4))
+                );
+
+
+        mockMvc.perform(get("/cars/portier/{portier}", "VIERDEURS"))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].licensePlate", Matchers.is("1VCJ854")))
+                .andExpect(jsonPath("$[0].merk", Matchers.is("vw")))
+                .andExpect(jsonPath("$", hasSize(1)));
+    }
+    @Test
+    public void whenAddCar_thenReturnCarJson() throws Exception {
+
+        CarInfo car= new CarInfo("audi","a3","1VQW871","5", TWEEDEURS);
+
+        // POST Car
+        mockServer.expect(ExpectedCount.once(),
+                requestTo(new URI("http://" + carInfoServiceBaseUrl + "/cars")))
+                .andExpect(method(HttpMethod.POST))
+                .andRespond(withStatus(HttpStatus.OK)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(mapper.writeValueAsString(car))
+                );
+
+
+        mockMvc.perform(post("/cars")
+                .param("merk", car.getMerk())
+                .param("type", car.getType())
+                .param("licensePlate", car.getLicensePlate())
+                .param("euroNorm", car.getEuroNorm())
+                .param("portier", car.getPortier().toString())
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.merk", is("audi")))
+                .andExpect(jsonPath("$.type", is("a3")));
+    }
+    @Test
+    public void whenUpdateCar_thenReturnCarJson() throws Exception {
+
+        CarInfo carInfoUPD= new CarInfo("audi","a5","1VQW871","6", TWEEDEURS);
+
+        //mock GetCar
+        mockGetCarByNumberPlate("1VQW871",carInfo1);
+
+        // PUT Car
+        mockServer.expect(ExpectedCount.once(),
+                requestTo(new URI("http://" + carInfoServiceBaseUrl + "/cars")))
+                .andExpect(method(HttpMethod.PUT))
+                .andRespond(withStatus(HttpStatus.OK)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(mapper.writeValueAsString(carInfoUPD))
+                );
+
+
+
+        mockMvc.perform(put("/cars")
+                .param("licensePlate", carInfoUPD.getLicensePlate())
+                .param("type", carInfoUPD.getType())
+                .param("euroNorm", carInfoUPD.getEuroNorm())
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.merk", is("audi")))
+                .andExpect(jsonPath("$.euroNorm", is("6")))
+                .andExpect(jsonPath("$.type", is("a5")));
+
+    }
+
+    @Test
+    public void whenDeleteCar_thenReturnStatusOk() throws Exception {
+
+        // DELETE inspection
+        mockServer.expect(ExpectedCount.once(),
+                requestTo(new URI("http://" + carInfoServiceBaseUrl + "/cars/license_plate/1VQW871")))
+                .andExpect(method(HttpMethod.DELETE))
+                .andRespond(withStatus(HttpStatus.OK)
+                );
+
+        mockMvc.perform(delete("/cars/license_plate/{licensePlate}", "1VQW871"))
+                .andExpect(status().isOk());
+    }
+
+    //Helper methods
 
     // GET carinfo
-    void mockGetCarByNumberPlate(String numberPlate, CarInfo carInfo) throws URISyntaxException, JsonProcessingException {
+    void mockGetCarByNumberPlate(String licensePlate, CarInfo carInfo) throws URISyntaxException, JsonProcessingException {
         mockServer.expect(ExpectedCount.once(),
-                requestTo(new URI("http://" + carInfoServiceBaseUrl + "/cars/license_plate/"+numberPlate)))
+                requestTo(new URI("http://" + carInfoServiceBaseUrl + "/cars/license_plate/"+licensePlate)))
                 .andExpect(method(HttpMethod.GET))
                 .andRespond(withStatus(HttpStatus.OK)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -255,7 +403,7 @@ class CarInspectionControllerUnitTests {
     }
 
     // GET inspection
-     void mockGetInspectionByInspectionNumber (String inspectionNr, Inspection inspection) throws JsonProcessingException, URISyntaxException {
+    void mockGetInspectionByInspectionNumber (String inspectionNr, Inspection inspection) throws JsonProcessingException, URISyntaxException {
         mockServer.expect(ExpectedCount.once(),
                 requestTo(new URI("http://" + inspectionServiceBaseUrl + "/inspections/inspection_number/"+inspectionNr)))
                 .andExpect(method(HttpMethod.GET))
