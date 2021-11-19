@@ -152,9 +152,9 @@ public class CarInspectionController {
     public InspectionHistory getInspectionsByLicensePlateAndInspectionDate(@PathVariable String licensePlate,@PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate inspectionDate){
         InspectionHistory inspectionHistory= new InspectionHistory();
         ResponseEntity<List<Inspection>> responseEntityInspections =
-                restTemplate.exchange("http://" + inspectionServiceBaseUrl + "/inspections/license_plate/"+licensePlate+"/inspection_date/"+inspectionDate,
+                restTemplate.exchange("http://" + inspectionServiceBaseUrl + "/inspections/license_plate/{licensePlate}/inspection_date/{inspectionDate}",
                         HttpMethod.GET, null, new ParameterizedTypeReference<List<Inspection>>() {
-                        });
+                        }, licensePlate,inspectionDate);
         List<Inspection> inspections = responseEntityInspections.getBody();
         CarInfo carInfo = restTemplate.getForObject("http://" + carInfoServiceBaseUrl + "/cars/license_plate/{licensePlate}",
                 CarInfo.class, licensePlate);
