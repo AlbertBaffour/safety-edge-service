@@ -33,4 +33,4 @@ jobs:
         run: docker build -t ${{ secrets.DOCKER_USER }}/car-inspection-service:latest .
 
       - name: Upload container to Docker Hub with Push
-        run: docker push ${{ secrets.DOCKER_USER }}/car-inspection-service:latest
+        run: docker push ${{ secrets.DOCKER_USER }}/satety-edge-service:latest
