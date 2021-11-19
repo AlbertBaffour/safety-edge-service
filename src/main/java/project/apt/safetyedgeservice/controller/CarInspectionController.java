@@ -15,7 +15,6 @@ import project.apt.safetyedgeservice.model.InspectionHistory;
 
 import java.time.Instant;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -30,10 +29,10 @@ public class CarInspectionController {
     private String carInfoServiceBaseUrl;
 
     /////////////CarInfo Mapppings///////////////////////
-    @GetMapping("/cars/")
+    @GetMapping("/cars")
     public List<CarInfo> getCars(){
         ResponseEntity<List<CarInfo>> responseEntityCars =
-                restTemplate.exchange("http://" + carInfoServiceBaseUrl + "/cars/",
+                restTemplate.exchange("http://" + carInfoServiceBaseUrl + "/cars",
                         HttpMethod.GET, null, new ParameterizedTypeReference<List<CarInfo>>() {
                         });
 
@@ -78,12 +77,11 @@ public class CarInspectionController {
     }
 
     @PutMapping("/cars")
-    public CarInfo updateCarInfo(@RequestParam String merk, @RequestParam String type , @RequestParam String licensePlate, @RequestParam String euroNorm, @RequestParam CarInfo.PortierOptie portier){
-        if (licensePlate!=null || licensePlate.trim()=="") {
+    public CarInfo updateCarInfo(@RequestParam String licensePlate, @RequestParam(required = false) String type , @RequestParam(required = false) String merk, @RequestParam(required = false) String euroNorm, @RequestParam(required = false) CarInfo.PortierOptie portier){
+        if (!licensePlate.isEmpty()) {
             CarInfo carInfo =
-                    restTemplate.getForObject("http://" + carInfoServiceBaseUrl + "/cars/license_plate/" + licensePlate,
-                            CarInfo.class);
-            CarInfo retrievedCarinfo = new CarInfo();
+                    restTemplate.getForObject("http://" + carInfoServiceBaseUrl + "/cars/license_plate/{licensePlate}",
+                            CarInfo.class, licensePlate);
 
             if (carInfo != null) {
                 if (merk != null) {
@@ -111,7 +109,7 @@ public class CarInspectionController {
     @DeleteMapping("/cars/license_plate/{licensePlate}")
     public ResponseEntity deleteCar(@PathVariable String licensePlate){
 
-        restTemplate.delete("http://" + carInfoServiceBaseUrl + "/cars/license_plate/" + licensePlate);
+        restTemplate.delete("http://" + carInfoServiceBaseUrl + "/cars/license_plate/{licensePlate}"  ,licensePlate);
 
         return ResponseEntity.ok().build();
     }
@@ -183,8 +181,8 @@ public class CarInspectionController {
     public InspectionHistory updateInspection(@RequestParam Long inspectionNumber,@RequestParam String licensePlate, @RequestParam String comment, @RequestParam Boolean passed){
 
         Inspection inspection =
-                restTemplate.getForObject("http://" +inspectionServiceBaseUrl+ "/inspections/inspection_number/" + inspectionNumber,
-                        Inspection.class);
+                restTemplate.getForObject("http://" +inspectionServiceBaseUrl+ "/inspections/inspection_number/{inspectionNumber}" ,
+                        Inspection.class,inspectionNumber);
         Inspection retrievedInspection=new Inspection();
         if(inspection!=null) {
             if (comment != null) {
@@ -211,7 +209,7 @@ public class CarInspectionController {
     @DeleteMapping("/inspections/inspection_number/{inspectionNumber}")
     public ResponseEntity deleteInspection(@PathVariable Long inspectionNumber){
 
-        restTemplate.delete("http://" + inspectionServiceBaseUrl + "/inspections/inspection_number/" + inspectionNumber);
+        restTemplate.delete("http://" + inspectionServiceBaseUrl + "/inspections/inspection_number/{inspectionNumber}" , inspectionNumber);
 
         return ResponseEntity.ok().build();
     }
