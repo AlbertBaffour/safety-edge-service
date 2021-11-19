@@ -16,7 +16,7 @@ spec:
     spec:                     # Spec for the containers that will be run in the Pods
       containers:
         - name: safety-edge-service-server
-          image: inspectionedgehub/satety-edge-service
+          image: inspectionedgehub/safety-edge-service
           imagePullPolicy: Always
           ports:
             - name: http
