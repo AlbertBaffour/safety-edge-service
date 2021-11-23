@@ -185,9 +185,7 @@ class CarInspectionControllerUnitTests {
         mockGetCarByNumberPlate("1VQW871", carInfo1);
 
         mockMvc.perform(post("/inspections")
-                .param("licensePlate", inspection.getLicensePlate())
-                .param("comment", inspection.getComment())
-                .param("passed", inspection.getPassed().toString())
+                .content(mapper.writeValueAsString(inspection))
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -217,10 +215,7 @@ class CarInspectionControllerUnitTests {
         mockGetCarByNumberPlate("1VQW871",carInfo1);
 
         mockMvc.perform(put("/inspections")
-                .param("inspectionNumber", inspectionUpd.getInspectionNumber().toString())
-                .param("licensePlate", inspectionUpd.getLicensePlate())
-                .param("comment", inspectionUpd.getComment())
-                .param("passed", inspectionUpd.getPassed().toString())
+                .content(mapper.writeValueAsString(inspectionUpd))
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.merk", is("audi")))
@@ -333,11 +328,7 @@ class CarInspectionControllerUnitTests {
 
 
         mockMvc.perform(post("/cars")
-                .param("merk", car.getMerk())
-                .param("type", car.getType())
-                .param("licensePlate", car.getLicensePlate())
-                .param("euroNorm", car.getEuroNorm())
-                .param("portier", car.getPortier().toString())
+                .content(mapper.writeValueAsString(car))
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -364,9 +355,7 @@ class CarInspectionControllerUnitTests {
 
 
         mockMvc.perform(put("/cars")
-                .param("licensePlate", carInfoUPD.getLicensePlate())
-                .param("type", carInfoUPD.getType())
-                .param("euroNorm", carInfoUPD.getEuroNorm())
+                .content(mapper.writeValueAsString(carInfoUPD))
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.merk", is("audi")))

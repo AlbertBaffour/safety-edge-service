@@ -67,34 +67,34 @@ public class CarInspectionController {
     }
 
     @PostMapping("/cars")
-    public CarInfo addInspection(@RequestParam String merk, @RequestParam String type , @RequestParam String licensePlate, @RequestParam String euroNorm, @RequestParam CarInfo.PortierOptie portier){
+    public CarInfo addInspection(@RequestBody CarInfo carInfoNew){
         CarInfo carInfo =
                 restTemplate.postForObject("http://" + carInfoServiceBaseUrl + "/cars",
-                        new CarInfo(merk,type,licensePlate,euroNorm,portier),CarInfo.class);
+                        carInfoNew,CarInfo.class);
 
 
         return carInfo;
     }
 
     @PutMapping("/cars")
-    public CarInfo updateCarInfo(@RequestParam String licensePlate, @RequestParam(required = false) String type , @RequestParam(required = false) String merk, @RequestParam(required = false) String euroNorm, @RequestParam(required = false) CarInfo.PortierOptie portier){
-        if (!licensePlate.isEmpty()) {
+    public CarInfo updateCarInfo(@RequestBody CarInfo carInfoUpd){
+        if (!carInfoUpd.getLicensePlate().isEmpty()) {
             CarInfo carInfo =
                     restTemplate.getForObject("http://" + carInfoServiceBaseUrl + "/cars/license_plate/{licensePlate}",
-                            CarInfo.class, licensePlate);
+                            CarInfo.class, carInfoUpd.getLicensePlate());
 
             if (carInfo != null) {
-                if (merk != null) {
-                    carInfo.setMerk(merk);
+                if (carInfoUpd.getMerk() != null) {
+                    carInfo.setMerk(carInfoUpd.getMerk());
                 }
-                if (type != null) {
-                    carInfo.setType(type);
+                if (carInfoUpd.getType() != null) {
+                    carInfo.setType(carInfoUpd.getType());
                 }
-                if (euroNorm != null) {
-                    carInfo.setEuroNorm(euroNorm);
+                if (carInfoUpd.getEuroNorm() != null) {
+                    carInfo.setEuroNorm(carInfoUpd.getEuroNorm());
                 }
-                if (portier != null) {
-                    carInfo.setPortier(portier);
+                if (carInfoUpd.getPortier() != null) {
+                    carInfo.setPortier(carInfoUpd.getPortier());
                 }
 
                 ResponseEntity<CarInfo> responseEntityCar =
@@ -164,32 +164,33 @@ public class CarInspectionController {
         return inspectionHistory;
     }
     @PostMapping("/inspections")
-    public InspectionHistory addInspection(@RequestParam String licensePlate, @RequestParam String comment, @RequestParam Boolean passed){
+    public InspectionHistory addInspection(@RequestBody Inspection inspectionNew){
         Long inspectionNumber= Instant.now().getEpochSecond();
         Inspection inspection =
                 restTemplate.postForObject("http://" + inspectionServiceBaseUrl + "/inspections",
-                        new Inspection(inspectionNumber,licensePlate,comment,passed, LocalDate.now()),Inspection.class);
+                        inspectionNew,Inspection.class);
 
         CarInfo carInfo =
                 restTemplate.getForObject("http://" + carInfoServiceBaseUrl + "/cars/license_plate/{licensePlate}",
-                        CarInfo.class,licensePlate);
+                        CarInfo.class,inspectionNew.getLicensePlate());
 
+        assert carInfo != null;
         return new InspectionHistory(carInfo, inspection);
     }
 
     @PutMapping("/inspections")
-    public InspectionHistory updateInspection(@RequestParam Long inspectionNumber,@RequestParam String licensePlate, @RequestParam String comment, @RequestParam Boolean passed){
+    public InspectionHistory updateInspection(@RequestBody Inspection inspectionUpd){
 
         Inspection inspection =
                 restTemplate.getForObject("http://" +inspectionServiceBaseUrl+ "/inspections/inspection_number/{inspectionNumber}" ,
-                        Inspection.class,inspectionNumber);
+                        Inspection.class,inspectionUpd.getInspectionNumber());
         Inspection retrievedInspection=new Inspection();
         if(inspection!=null) {
-            if (comment != null) {
-                inspection.setComment(comment);
+            if (inspectionUpd.getComment() != null) {
+                inspection.setComment(inspectionUpd.getComment());
             }
-            if (passed != null) {
-                inspection.setPassed(passed);
+            if (inspectionUpd.getPassed() != null) {
+                inspection.setPassed(inspectionUpd.getPassed());
             }
             inspection.setInspectionDate(LocalDate.now());
 
@@ -201,7 +202,7 @@ public class CarInspectionController {
         }
         CarInfo carInfo =
                 restTemplate.getForObject("http://" + carInfoServiceBaseUrl + "/cars/license_plate/{licensePlate}",
-                        CarInfo.class,licensePlate);
+                        CarInfo.class,inspectionUpd.getLicensePlate());
 
         assert carInfo != null;
         return new InspectionHistory(carInfo, retrievedInspection);
