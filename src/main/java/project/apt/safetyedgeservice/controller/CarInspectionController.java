@@ -167,6 +167,7 @@ public class CarInspectionController {
     public InspectionHistory addInspection(@RequestBody Inspection inspectionNew){
         Long inspectionNumber= Instant.now().getEpochSecond();
         inspectionNew.setInspectionNumber(inspectionNumber);
+        inspectionNew.setInspectionDate(LocalDate.now());
         Inspection inspection =
                 restTemplate.postForObject("http://" + inspectionServiceBaseUrl + "/inspections",
                         inspectionNew,Inspection.class);
