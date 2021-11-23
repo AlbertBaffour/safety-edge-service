@@ -204,7 +204,7 @@ public class CarInspectionController {
         }
         CarInfo carInfo =
                 restTemplate.getForObject("http://" + carInfoServiceBaseUrl + "/cars/license_plate/{licensePlate}",
-                        CarInfo.class,inspectionUpd.getLicensePlate());
+                        CarInfo.class,retrievedInspection.getLicensePlate());
 
         assert carInfo != null;
         return new InspectionHistory(carInfo, retrievedInspection);
